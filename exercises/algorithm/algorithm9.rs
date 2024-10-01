@@ -1,6 +1,6 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
 // I AM NOT DONE
 
@@ -23,7 +23,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: vec![],
             comparator,
         }
     }
@@ -37,7 +37,28 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        if self.is_empty() {
+            self.items.push(value);
+            self.count += 1;
+            return;
+        }
+        self.items.push(value);
+        self.count += 1;
+
+        self.bubble_up(self.len() - 1);
+    }
+
+    fn bubble_up(&mut self, idx: usize) {
+        let mut idx = idx;
+        while idx != 0 {
+            let parent_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
+                self.items.swap(idx, parent_idx);
+            } else {
+                break;
+            }
+            idx = parent_idx;
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +78,7 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        self.left_child_idx(idx)
     }
 }
 
@@ -79,13 +99,12 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        self.items.iter().next().cloned()
     }
 }
 
