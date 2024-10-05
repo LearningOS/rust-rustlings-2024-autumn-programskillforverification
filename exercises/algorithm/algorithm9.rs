@@ -2,7 +2,6 @@
     heap
     This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -23,7 +22,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![],
+            items: vec![T::default()],
             comparator,
         }
     }
@@ -37,27 +36,17 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        if self.is_empty() {
-            self.items.push(value);
-            self.count += 1;
-            return;
-        }
         self.items.push(value);
         self.count += 1;
 
-        self.bubble_up(self.len() - 1);
-    }
-
-    fn bubble_up(&mut self, idx: usize) {
-        let mut idx = idx;
-        while idx != 0 {
-            let parent_idx = self.parent_idx(idx);
-            if (self.comparator)(&self.items[idx], &self.items[parent_idx]) {
-                self.items.swap(idx, parent_idx);
-            } else {
-                break;
+        // Heapify Down
+        let mut idx = self.count;
+        while self.parent_idx(idx) > 0 {
+            let pdx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[pdx]) {
+                self.items.swap(idx, pdx);
             }
-            idx = parent_idx;
+            idx = pdx;
         }
     }
 
@@ -78,7 +67,17 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        self.left_child_idx(idx)
+        if self.right_child_idx(idx) > self.count {
+            self.left_child_idx(idx)
+        } else {
+            let ldx = self.left_child_idx(idx);
+            let rdx = self.right_child_idx(idx);
+            if (self.comparator)(&self.items[ldx], &self.items[rdx]) {
+                ldx
+            } else {
+                rdx
+            }
+        }
     }
 }
 
@@ -99,12 +98,30 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default + Clone,
+    T: Default + Clone + Ord,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        self.items.iter().next().cloned()
+        if self.is_empty() {
+            return None;
+        }
+        let next = Some(self.items.swap_remove(1));
+        self.count -= 1;
+
+        if self.count > 0 {
+            // Heapify Down
+            let mut idx = 1;
+            while self.children_present(idx) {
+                let cdx = self.smallest_child_idx(idx);
+                if !(self.comparator)(&self.items[idx], &self.items[cdx]) {
+                    self.items.swap(idx, cdx);
+                }
+                idx = cdx;
+            }
+        }
+
+        next
     }
 }
 
